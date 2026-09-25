@@ -85,4 +85,5 @@ sequenceDiagram
 ## Changelog
 
 - added [UML](#uml) depicting how `bearerAuth` will check for a token for later requests rather than for credentials.
+- starter code from [class repo](https://github.com/jtimm-gicw/Code-401-PDX/tree/main/class-07) imported over.
 - 
