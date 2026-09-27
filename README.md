@@ -86,9 +86,24 @@ sequenceDiagram
 
 - added [UML](#uml) depicting how `bearerAuth` will check for a token for later requests rather than for credentials.
 - starter code from [class repo](https://github.com/jtimm-gicw/Code-401-PDX/tree/main/class-07) imported over.
-- installed dependencies from `package.json`; `npm install` -> creating `node_modules` and `package-lock.json`.
-- ran `[npm test -- --runInBand]` to confirm test failures from starterCode.
-  - `handleSecret()` response method, `.text` -> `.send` ; `src/auth/router/handlers.js`.
-    - passes test. `[] __tests__/src/auth/router/handlers/getSecret.test.js`
-- `Users` =/- `users` (import) and `.map()` is to be used on `userRecord` since that is the array returned from query; `src/auth/router/handlers.js`
-- 
+- installed dependencies from `package.json`; `npm install` -> creating `node_modules` and `package-lock.json`.  
+
+===
+
+- ran `[npm test -- --runInBand]` to confirm test failures from starterCode.  
+- `src/auth/router/handlers.js`;
+  - `.text` -> `.send` response method; `handleSecret()`.
+  - `Users` =/= `users` (import), and `.map()` is to be used on `userRecords` since that is the array returned from query; `handleGetUsers()`.
+  - proper use of `req` parameter (!`request`); `handleSignin()`.
+  - test expects `201` for succesful `/signup`; `handleSignup()`.
+- `src/auth/models/users.js`; 
+  - added missing import to allow `jwt.sign()` and `jwt.verify` access to library; `require('jsonwebtoken');`
+  - passed `process.env.SECRET` as signing key, which is separate to the payload in the return; `userSchema.token.get()`.
+  - updated `hashedPass` to wait and obtain hash before assigning `user.password`; `model.beforeCreate()`.
+  - specified **which** user to find; `where: `. return of user per successful hash-to-password comparison; `model.authenticateBasic()`.
+- `src/auth/middleware/basic.js`;
+  - changed import `users` to match with export from source.
+  - header checks reject missing credentials, wrong authentication scheme, or extra parts.
+  - failures receive the same 403 response.
+  - if successfull, authen user held by `req.user`, and `next()` lets the `/signin` handler run.
+- fix pending on name mismatch between `index.js` calling `start()` =/= `server.js` exporting `startup()`.
