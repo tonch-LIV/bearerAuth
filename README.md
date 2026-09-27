@@ -86,4 +86,9 @@ sequenceDiagram
 
 - added [UML](#uml) depicting how `bearerAuth` will check for a token for later requests rather than for credentials.
 - starter code from [class repo](https://github.com/jtimm-gicw/Code-401-PDX/tree/main/class-07) imported over.
+- installed dependencies from `package.json`; `npm install` -> creating `node_modules` and `package-lock.json`.
+- ran `[npm test -- --runInBand]` to confirm test failures from starterCode.
+  - `handleSecret()` response method, `.text` -> `.send` ; `src/auth/router/handlers.js`.
+    - passes test. `[] __tests__/src/auth/router/handlers/getSecret.test.js`
+- `Users` =/- `users` (import) and `.map()` is to be used on `userRecord` since that is the array returned from query; `src/auth/router/handlers.js`
 - 
