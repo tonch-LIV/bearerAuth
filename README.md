@@ -39,7 +39,7 @@ sequenceDiagram
         Server-->>Client: Invalid Login (no token)
     end
 
-    Client->>Server: GET /secretstuff (Bearer token)
+    Client->>Server: GET /secret (Bearer token)
     Server->>Auth: Verify JWT and applicable security rules
     Auth->>DB: Find user identified by verified token
     DB-->>Auth: User or no match
@@ -71,7 +71,7 @@ sequenceDiagram
     - server finds `user` object and compares password to stored hash; =/= decrypt.
     - if credentials match; JWT is created by server and `200` response returned.
     - ***(If the user does not exist or the password does not match, the server responds with `"Invalid Login"` and does not create a token.)***
-  - `/secretstuff`, a protected request, uses bearerAuthen middleware to check token before the route can respond and gain access.
+  - `/secret`, a protected request, uses bearerAuthen middleware to check token before the route can respond and gain access.
     - signature is checked to verify authenticity and ensure contents have not been altered.
     - restrictions are checked, if any (expiration, etc.).
     - locate user that matches token identity.
@@ -98,12 +98,16 @@ sequenceDiagram
   - test expects `201` for succesful `/signup`; `handleSignup()`.
 - `src/auth/models/users.js`; 
   - added missing import to allow `jwt.sign()` and `jwt.verify` access to library; `require('jsonwebtoken');`
-  - passed `process.env.SECRET` as signing key, which is separate to the payload in the return; `userSchema.token.get()`.
+  - passed `process.env.SECRET` as signing key in the return, which is separate to the payload ; `userSchema.token.get()`.
   - updated `hashedPass` to wait and obtain hash before assigning `user.password`; `model.beforeCreate()`.
   - specified **which** user to find; `where: `. return of user per successful hash-to-password comparison; `model.authenticateBasic()`.
+  - removed redundant `try / catch`, verified JWT signatures and payload usernames, awaiting matching user lookup / rejecting missing users; `model.authenticateToken();`.
 - `src/auth/middleware/basic.js`;
   - changed import `users` to match with export from source.
   - header checks reject missing credentials, wrong authentication scheme, or extra parts.
   - failures receive the same 403 response.
   - if successfull, authen user held by `req.user`, and `next()` lets the `/signin` handler run.
+- `src/auth/middleware/bearer.js`;
+  - follows `basic.js` structure; extracts & validates Bearer headers -> calls matching model method, `authenticateToken()` -> attach authen user and submitted token; `req.user` and `req.token` -> if success, call `next()`. 
+
 - fix pending on name mismatch between `index.js` calling `start()` =/= `server.js` exporting `startup()`.

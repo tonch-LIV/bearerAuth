@@ -3,19 +3,25 @@
 const { users } = require('../models/index.js');
 
 module.exports = async (req, res, next) => {
-
   try {
+    const authorization = req.headers.authorization || '';
+    const [scheme, token, extra] = authorization.trim().split(/\s+/);
 
-    if (!req.headers.authorization) { next('Invalid Login') }
+    if (
+      scheme.toLowerCase() !== 'bearer' ||
+      !token ||
+      extra
+    ) {
+      throw new Error('Invalid Login')
+    }
 
-    const token = req.headers.authorization.split(' ').pop();
-    const validUser = await users.authenticateWithToken(token);
-
-    req.user = validUser;
-    req.token = validUser.token;
-
+    // attaches authen user
+    req.user = await users.authenticateToken(token);
+    req.token = token; // token supplied by client
   } catch (e) {
     console.error(e);
-    res.status(403).send('Invalid Login');
+    return res.status(403).send('Invalid Login');
   }
+
+  return next();
 }

@@ -42,17 +42,33 @@ const userSchema = (sequelize, DataTypes) => {
 
   // Bearer AUTH: Validating a token
   model.authenticateToken = async function (token) {
-    try {
-      const parsedToken = jwt.verify(token, process.env.SECRET);
-      const user = this.findOne({ username: parsedToken.username })
-      if (user) { return user; }
-      throw new Error("User Not Found");
-    } catch (e) {
-      throw new Error(e.message)
-    }
-  }
+    // checks signature and throws error is verification fails
+    const parsedToken = jwt.verify(token, process.env.SECRET);
 
-  return model;
-}
+    // checks token for username required
+    if (
+      typeof parsedToken !== 'object' ||
+      parsedToken === null ||
+      typeof parsedToken.username !== 'string' ||
+      !parsedToken.username
+    ) {
+      throw new Error('Invalid Login');
+    }
+  
+    // restricts query to specific username; waits for DB result, either matching user or 'null'.
+    const user = await this.findOne({ 
+      where: { username: parsedToken.username} 
+    });
+    
+    // combo of signature and existing user
+    if (!user) {
+      throw new Error('Invalid Login');
+    }
+    
+    return user; // authen DB user
+  };
+
+  return model; // config'd sequelize model to models/index.js
+};
 
 module.exports = userSchema;
