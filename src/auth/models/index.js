@@ -12,7 +12,8 @@ let db_config = {
 
 switch (environment) {
   case 'test':
-    DATABASE_URL = 'sqlite::memory'
+    db_config.dialect = 'sqlite';
+    db_config.storage = ':memory:';
     break;
   case 'production':
     db_config.dialectOptions = {
@@ -21,13 +22,15 @@ switch (environment) {
     }
     break;
   case 'development':
-    db_config.logging = true;
+    db_config.logging = console.log;
     break;
   default:
     console.log('Connecting to ' + DATABASE_URL, db_config);
 }
 
-const sequelize = new Sequelize(DATABASE_URL, db_config);
+const sequelize = environment === 'test'
+  ? new Sequelize(db_config)
+  : new Sequelize(DATABASE_URL, db_config);
 
 module.exports = {
   db: sequelize,

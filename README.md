@@ -109,5 +109,9 @@ sequenceDiagram
   - if successfull, authen user held by `req.user`, and `next()` lets the `/signin` handler run.
 - `src/auth/middleware/bearer.js`;
   - follows `basic.js` structure; extracts & validates Bearer headers -> calls matching model method, `authenticateToken()` -> attach authen user and submitted token; `req.user` and `req.token` -> if success, call `next()`. 
-
-- fix pending on name mismatch between `index.js` calling `start()` =/= `server.js` exporting `startup()`.
+- `index.js`;
+  - matched startup call in `index.js` to `server.js` exporting `startup()`, supplied explicit port fallback.
+- `src/auth/models/index.js`;
+  - `console.log` as logging fucntion; `case 'development':`.
+  - configured SQLite with explicit options for `dialect` and `storage` to bypass connection-string parsing; `case 'test': db_config` & `Sequelize` constructor.
+- Verified server startup and rejection of request w/o token; `index.js`, `GET /secret` returned `403 Invalid Login`.
