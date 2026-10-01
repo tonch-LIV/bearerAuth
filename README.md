@@ -139,7 +139,7 @@ JWT_EXPIRATION_ENABLED=false JWT_CONTEXT_ENABLED=false npm test -- --runInBand
 
 - [Repository](https://github.com/tonch-LIV/bearerAuth)
 - [GitHub Actions](https://github.com/tonch-LIV/bearerAuth/actions)
-- Submission PR: pending
+- [Submission PR](https://github.com/tonch-LIV/bearerAuth/pull/1)
 - Deployment: not included; application verified locally.
   
 ## Changelog
