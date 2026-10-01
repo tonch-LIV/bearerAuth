@@ -7,7 +7,6 @@ data
 *.crt
 *.key
 *.env
-package-lock.json
 
 ### Vim ###
 # swap

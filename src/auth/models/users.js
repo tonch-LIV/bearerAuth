@@ -9,14 +9,36 @@ const userSchema = (sequelize, DataTypes) => {
     password: { type: DataTypes.STRING, allowNull: false, },
     token: {
       type: DataTypes.VIRTUAL,
-      get() {
+      get() {  // adds expiration and app id's when enabled
+        const options = { algorithm: 'HS256' };
+
+        if (process.env.JWT_EXPIRATION_ENABLED === 'true') {
+          options.expiresIn = '15m';
+        }
+
+        if (process.env.JWT_CONTEXT_ENABLED === 'true') {
+          options.issuer = process.env.JWT_ISSUER || 'bearer-auth';
+          options.audience =
+            process.env.JWT_AUDIENCE || 'bearer-auth-client';
+        }
+        
         return jwt.sign(
           { username: this.username }, 
-          process.env.SECRET
+          process.env.SECRET,
+          options
         );
       }
     }
   });
+
+  // preserve hash internally for authen and keeping it out of HTTP responses
+  model.prototype.toJSON = function () {
+    return {
+      id: this.id,
+      _id: this.id,
+      username: this.username,
+    };
+  };
 
   model.beforeCreate(async (user) => {
     const hashedPass = await bcrypt.hash(user.password, 10);
@@ -40,18 +62,41 @@ const userSchema = (sequelize, DataTypes) => {
      return user;
   };
 
-  // Bearer AUTH: Validating a token
+  // Bearer AUTH: Validating a token, checks signature and enabled restrictions
   model.authenticateToken = async function (token) {
-    // checks signature and throws error is verification fails
-    const parsedToken = jwt.verify(token, process.env.SECRET);
+    const options = { algorithms: ['HS256'] };
+    const expirationEnabled = 
+      process.env.JWT_EXPIRATION_ENABLED === 'true';
 
-    // checks token for username required
+    // token age limit
+    if (expirationEnabled) {
+      options.maxAge = '15m';
+    }
+
+    if (process.env.JWT_CONTEXT_ENABLED === 'true') {
+      options.issuer = process.env.JWT_ISSUER || 'bearer-auth';
+      options.audience = process.env.JWT_AUDIENCE || 'bearer-auth-client';
+    }
+
+    // verifies signature and config claims; throws error is validation fails
+    const parsedToken = jwt.verify(
+      token,
+      process.env.SECRET,
+      options
+    );
+
+    // checks payload obj for non-empty username 
     if (
       typeof parsedToken !== 'object' ||
       parsedToken === null ||
       typeof parsedToken.username !== 'string' ||
       !parsedToken.username
     ) {
+      throw new Error('Invalid Login');
+    }
+
+    // require numeric expiration claim when expiration is enabled.
+    if (expirationEnabled && !Number.isFinite(parsedToken.exp)) {
       throw new Error('Invalid Login');
     }
   
